@@ -91,7 +91,7 @@ func TestVectors(t *testing.T) {
 	}
 }
 
-func benchmarkArgon2(mode int, time, memory uint32, threads uint8, keyLen uint32, b *testing.B) {
+func benchmarkArgon2(mode int, time, memory uint32, threads, keyLen uint32, b *testing.B) {
 	password := []byte("password")
 	salt := []byte("choosing random salts is hard")
 	b.ReportAllocs()
@@ -129,10 +129,9 @@ func BenchmarkArgon2id(b *testing.B) {
 
 // Generated with the CLI of https://github.com/P-H-C/phc-winner-argon2/blob/master/argon2-specs.pdf
 var testVectors = []struct {
-	mode         int
-	time, memory uint32
-	threads      uint8
-	hash         string
+	mode                  int
+	time, memory, threads uint32
+	hash                  string
 }{
 	{
 		mode: argon2i, time: 1, memory: 64, threads: 1,
