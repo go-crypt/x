@@ -69,7 +69,7 @@ const (
 // adjusted to the number of available CPUs. The cost parameters should be
 // increased as memory latency and CPU parallelism increases. Remember to get a
 // good random salt.
-func IKey(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte {
+func IKey(password, salt []byte, time, memory uint32, threads, keyLen uint32) []byte {
 	return deriveKey(argon2i, password, salt, nil, nil, time, memory, threads, keyLen)
 }
 
@@ -93,11 +93,11 @@ func IKey(password, salt []byte, time, memory uint32, threads uint8, keyLen uint
 // adjusted to the numbers of available CPUs. The cost parameters should be
 // increased as memory latency and CPU parallelism increases. Remember to get a
 // good random salt.
-func IDKey(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte {
+func IDKey(password, salt []byte, time, memory uint32, threads, keyLen uint32) []byte {
 	return deriveKey(argon2id, password, salt, nil, nil, time, memory, threads, keyLen)
 }
 
-func deriveKey(mode int, password, salt, secret, data []byte, time, memory uint32, threads uint8, keyLen uint32) []byte {
+func deriveKey(mode int, password, salt, secret, data []byte, time, memory uint32, threads, keyLen uint32) []byte {
 	if time < 1 {
 		panic("argon2: number of rounds too small")
 	}
