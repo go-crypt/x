@@ -50,7 +50,7 @@ const (
 	argon2id
 )
 
-// Key derives a key from the password, salt, and cost parameters using Argon2i
+// IKey derives a key from the password, salt, and cost parameters using Argon2i
 // returning a byte slice of length keyLen that can be used as cryptographic
 // key. The CPU cost and parallelism degree must be greater than zero.
 //
@@ -69,7 +69,7 @@ const (
 // adjusted to the number of available CPUs. The cost parameters should be
 // increased as memory latency and CPU parallelism increases. Remember to get a
 // good random salt.
-func Key(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte {
+func IKey(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte {
 	return deriveKey(argon2i, password, salt, nil, nil, time, memory, threads, keyLen)
 }
 
