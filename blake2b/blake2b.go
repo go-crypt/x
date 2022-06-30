@@ -24,17 +24,6 @@ import (
 	"hash"
 )
 
-const (
-	// The blocksize of BLAKE2b in bytes.
-	BlockSize = 128
-	// The hash size of BLAKE2b-512 in bytes.
-	Size = 64
-	// The hash size of BLAKE2b-384 in bytes.
-	Size384 = 48
-	// The hash size of BLAKE2b-256 in bytes.
-	Size256 = 32
-)
-
 var (
 	useAVX2 bool
 	useAVX  bool

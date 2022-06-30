@@ -28,18 +28,6 @@ type XOF interface {
 	Reset()
 }
 
-// OutputLengthUnknown can be used as the size argument to NewXOF to indicate
-// the length of the output is not known in advance.
-const OutputLengthUnknown = 0
-
-// magicUnknownOutputLength is a magic value for the output size that indicates
-// an unknown number of output bytes.
-const magicUnknownOutputLength = (1 << 32) - 1
-
-// maxOutputLength is the absolute maximum number of bytes to produce when the
-// number of output bytes is unknown.
-const maxOutputLength = (1 << 32) * 64
-
 // NewXOF creates a new variable-output-length hash. The hash either produce a
 // known number of bytes (1 <= size < 2**32-1), or an unknown number of bytes
 // (size == OutputLengthUnknown). In the latter case, an absolute limit of
