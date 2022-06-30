@@ -73,6 +73,13 @@ func IKey(password, salt []byte, time, memory uint32, threads, keyLen uint32) []
 	return deriveKey(argon2i, password, salt, nil, nil, time, memory, threads, keyLen)
 }
 
+// DKey derives a key from the password, salt, and cost parameters using Argon2d
+// returning a byte slice of length keyLen that can be used as cryptographic
+// key. The CPU cost and parallelism degree must be greater than zero.
+func DKey(password, salt []byte, time, memory, threads, keyLen uint32) []byte {
+	return deriveKey(argon2d, password, salt, nil, nil, time, memory, threads, keyLen)
+}
+
 // IDKey derives a key from the password, salt, and cost parameters using
 // Argon2id returning a byte slice of length keyLen that can be used as
 // cryptographic key. The CPU cost and parallelism degree must be greater than
