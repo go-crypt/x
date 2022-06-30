@@ -10,69 +10,12 @@ package bcrypt // import "github.com/go-crypt/x/bcrypt"
 import (
 	"crypto/rand"
 	"crypto/subtle"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
 
 	"github.com/go-crypt/x/blowfish"
 )
-
-const (
-	MinCost     int = 4  // the minimum allowable cost as passed in to GenerateFromPassword
-	MaxCost     int = 31 // the maximum allowable cost as passed in to GenerateFromPassword
-	DefaultCost int = 10 // the cost that will actually be set if a cost below MinCost is passed into GenerateFromPassword
-)
-
-// The error returned from CompareHashAndPassword when a password and hash do
-// not match.
-var ErrMismatchedHashAndPassword = errors.New("crypto/bcrypt: hashedPassword is not the hash of the given password")
-
-// The error returned from CompareHashAndPassword when a hash is too short to
-// be a bcrypt hash.
-var ErrHashTooShort = errors.New("crypto/bcrypt: hashedSecret too short to be a bcrypted password")
-
-// The error returned from CompareHashAndPassword when a hash was created with
-// a bcrypt algorithm newer than this implementation.
-type HashVersionTooNewError byte
-
-func (hv HashVersionTooNewError) Error() string {
-	return fmt.Sprintf("crypto/bcrypt: bcrypt algorithm version '%c' requested is newer than current version '%c'", byte(hv), majorVersion)
-}
-
-// The error returned from CompareHashAndPassword when a hash starts with something other than '$'
-type InvalidHashPrefixError byte
-
-func (ih InvalidHashPrefixError) Error() string {
-	return fmt.Sprintf("crypto/bcrypt: bcrypt hashes must start with '$', but hashedSecret started with '%c'", byte(ih))
-}
-
-type InvalidCostError int
-
-func (ic InvalidCostError) Error() string {
-	return fmt.Sprintf("crypto/bcrypt: cost %d is outside allowed range (%d,%d)", int(ic), int(MinCost), int(MaxCost))
-}
-
-const (
-	majorVersion       = '2'
-	minorVersion       = 'a'
-	maxSaltSize        = 16
-	maxCryptedHashSize = 23
-	encodedSaltSize    = 22
-	encodedHashSize    = 31
-	minHashSize        = 59
-)
-
-// magicCipherData is an IV for the 64 Blowfish encryption calls in
-// bcrypt(). It's the string "OrpheanBeholderScryDoubt" in big-endian bytes.
-var magicCipherData = []byte{
-	0x4f, 0x72, 0x70, 0x68,
-	0x65, 0x61, 0x6e, 0x42,
-	0x65, 0x68, 0x6f, 0x6c,
-	0x64, 0x65, 0x72, 0x53,
-	0x63, 0x72, 0x79, 0x44,
-	0x6f, 0x75, 0x62, 0x74,
-}
 
 type hashed struct {
 	hash  []byte
