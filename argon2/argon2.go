@@ -78,15 +78,15 @@ func deriveKey(mode int, password, salt, secret, data []byte, time, memory uint3
 	if threads < 1 {
 		panic("argon2: parallelism degree too low")
 	}
-	h0 := initHash(password, salt, secret, data, time, memory, uint32(threads), keyLen, mode)
+	h0 := initHash(password, salt, secret, data, time, memory, threads, keyLen, mode)
 
 	memory = memory / (syncPoints * uint32(threads)) * (syncPoints * uint32(threads))
 	if memory < 2*syncPoints*uint32(threads) {
 		memory = 2 * syncPoints * uint32(threads)
 	}
-	B := initBlocks(&h0, memory, uint32(threads))
-	processBlocks(B, time, memory, uint32(threads), mode)
-	return extractKey(B, memory, uint32(threads), keyLen)
+	B := initBlocks(&h0, memory, threads)
+	processBlocks(B, time, memory, threads, mode)
+	return extractKey(B, memory, threads, keyLen)
 }
 
 // IKey derives a key from the password, salt, and cost parameters using Argon2i
