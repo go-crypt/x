@@ -47,6 +47,9 @@ import (
 	"github.com/go-crypt/x/blake2b"
 )
 
+// KeyFunc represents the functions which can derive keys.
+type KeyFunc func(password, salt []byte, time, memory, threads, keyLen uint32) []byte
+
 // IDKey derives a key from the password, salt, and cost parameters using
 // Argon2id returning a byte slice of length keyLen that can be used as
 // cryptographic key. The CPU cost and parallelism degree must be greater than
