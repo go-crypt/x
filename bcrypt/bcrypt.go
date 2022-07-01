@@ -37,6 +37,15 @@ func GenerateFromPassword(password []byte, cost int) ([]byte, error) {
 	return p.Hash(), nil
 }
 
+// Key returns a new key from password/salt combo.
+func Key(password, salt []byte, cost int) ([]byte, error) {
+	p, err := newFromPasswordSalt(password, salt, cost)
+	if err != nil {
+		return nil, err
+	}
+	return p.Hash(), nil
+}
+
 // CompareHashAndPassword compares a bcrypt hashed password with its possible
 // plaintext equivalent. Returns nil on success, or an error on failure.
 func CompareHashAndPassword(hashedPassword, password []byte) error {
@@ -70,33 +79,36 @@ func Cost(hashedPassword []byte) (int, error) {
 	return p.cost, nil
 }
 
-func newFromPassword(password []byte, cost int) (*hashed, error) {
+func newFromPasswordSalt(password, salt []byte, cost int) (p *hashed, err error) {
 	if cost < MinCost {
 		cost = DefaultCost
 	}
-	p := new(hashed)
+	p = new(hashed)
 	p.major = majorVersion
 	p.minor = minorVersion
 
-	err := checkCost(cost)
-	if err != nil {
+	if err = checkCost(cost); err != nil {
 		return nil, err
 	}
 	p.cost = cost
 
-	unencodedSalt := make([]byte, maxSaltSize)
-	_, err = io.ReadFull(rand.Reader, unencodedSalt)
-	if err != nil {
-		return nil, err
-	}
-
-	p.salt = Base64Encode(unencodedSalt)
+	p.salt = Base64Encode(salt)
 	hash, err := bcrypt(password, p.cost, p.salt)
 	if err != nil {
 		return nil, err
 	}
 	p.hash = hash
 	return p, err
+}
+
+func newFromPassword(password []byte, cost int) (p *hashed, err error) {
+	unencodedSalt := make([]byte, maxSaltSize)
+	_, err = io.ReadFull(rand.Reader, unencodedSalt)
+	if err != nil {
+		return nil, err
+	}
+
+	return newFromPasswordSalt(password, unencodedSalt, cost)
 }
 
 func newFromHash(hashedSecret []byte) (*hashed, error) {
