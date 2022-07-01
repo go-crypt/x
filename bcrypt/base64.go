@@ -10,7 +10,8 @@ const alphabet = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 
 var bcEncoding = base64.NewEncoding(alphabet)
 
-func base64Encode(src []byte) []byte {
+// Base64Encode is the base64 encoder for bcrypt.
+func Base64Encode(src []byte) []byte {
 	n := bcEncoding.EncodedLen(len(src))
 	dst := make([]byte, n)
 	bcEncoding.Encode(dst, src)
@@ -20,7 +21,8 @@ func base64Encode(src []byte) []byte {
 	return dst[:n]
 }
 
-func base64Decode(src []byte) ([]byte, error) {
+// Base64Decode is the base64 decoder for bcrypt.
+func Base64Decode(src []byte) ([]byte, error) {
 	numOfEquals := 4 - (len(src) % 4)
 	for i := 0; i < numOfEquals; i++ {
 		src = append(src, '=')

@@ -90,7 +90,7 @@ func newFromPassword(password []byte, cost int) (*hashed, error) {
 		return nil, err
 	}
 
-	p.salt = base64Encode(unencodedSalt)
+	p.salt = Base64Encode(unencodedSalt)
 	hash, err := bcrypt(password, p.cost, p.salt)
 	if err != nil {
 		return nil, err
@@ -144,12 +144,12 @@ func bcrypt(password []byte, cost int, salt []byte) ([]byte, error) {
 
 	// Bug compatibility with C bcrypt implementations. We only encode 23 of
 	// the 24 bytes encrypted.
-	hsh := base64Encode(cipherData[:maxCryptedHashSize])
+	hsh := Base64Encode(cipherData[:maxCryptedHashSize])
 	return hsh, nil
 }
 
 func expensiveBlowfishSetup(key []byte, cost uint32, salt []byte) (*blowfish.Cipher, error) {
-	csalt, err := base64Decode(salt)
+	csalt, err := Base64Decode(salt)
 	if err != nil {
 		return nil, err
 	}

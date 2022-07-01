@@ -110,13 +110,13 @@ func TestUnpaddedBase64Encoding(t *testing.T) {
 	original := []byte{101, 201, 101, 75, 19, 227, 199, 20, 239, 236, 133, 32, 30, 109, 243, 30}
 	encodedOriginal := []byte("XajjQvNhvvRt5GSeFk1xFe")
 
-	encoded := base64Encode(original)
+	encoded := Base64Encode(original)
 
 	if !bytes.Equal(encodedOriginal, encoded) {
 		t.Errorf("Encoded %v should have equaled %v", encoded, encodedOriginal)
 	}
 
-	decoded, err := base64Decode(encodedOriginal)
+	decoded, err := Base64Decode(encodedOriginal)
 	if err != nil {
 		t.Fatalf("base64Decode blew up: %s", err)
 	}
