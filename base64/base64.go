@@ -1,5 +1,14 @@
 package base64
 
+import (
+	"encoding/base64"
+)
+
+var AdaptedEncoding = base64.NewEncoding(encodeAdapted)
+
+// BcryptEncoding is the Bcrypt Base64 Alternative encoding.
+var BcryptEncoding = base64.NewEncoding(bcryptB64Alphabet)
+
 // EncodeCrypt implements the linux crypt lib's B64 encoding.
 func EncodeCrypt(src []byte) (dst []byte) {
 	if len(src) == 0 {
