@@ -109,7 +109,6 @@ func newFromPasswordSalt(password, salt []byte, cost int) (p *hashed, err error)
 	p.minor = minorVersion
 
 	if err = checkSalt(salt); err != nil {
-		fmt.Println("error", err)
 		return nil, err
 	}
 	p.salt = Base64Encode(salt)
@@ -153,16 +152,22 @@ func newFromHash(hashedSecret []byte) (*hashed, error) {
 	}
 	hashedSecret = hashedSecret[n:]
 
-	// The "+2" is here because we'll have to append at most 2 '=' to the salt
-	// when base64 decoding it in expensiveBlowfishSetup().
-	p.salt = make([]byte, encodedSaltSize, encodedSaltSize+2)
-	copy(p.salt, hashedSecret[:encodedSaltSize])
-
-	hashedSecret = hashedSecret[encodedSaltSize:]
-	p.hash = make([]byte, len(hashedSecret))
-	copy(p.hash, hashedSecret)
+	p.salt, p.hash = DecodeSecret(hashedSecret)
 
 	return p, nil
+}
+
+func DecodeSecret(secret []byte) (salt, key []byte) {
+
+	salt = make([]byte, encodedSaltSize, encodedSaltSize+2)
+
+	copy(salt, secret[:encodedSaltSize])
+
+	key = make([]byte, len(secret)-encodedSaltSize)
+
+	copy(key, secret[encodedSaltSize:])
+
+	return
 }
 
 func bcrypt(password []byte, cost int, salt []byte) ([]byte, error) {

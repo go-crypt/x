@@ -4,17 +4,15 @@
 
 package bcrypt
 
-import "encoding/base64"
-
-const alphabet = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-
-var bcEncoding = base64.NewEncoding(alphabet)
+import (
+	"github.com/go-crypt/x/base64"
+)
 
 // Base64Encode is the base64 encoder for bcrypt.
 func Base64Encode(src []byte) []byte {
-	n := bcEncoding.EncodedLen(len(src))
+	n := base64.BcryptEncoding.EncodedLen(len(src))
 	dst := make([]byte, n)
-	bcEncoding.Encode(dst, src)
+	base64.BcryptEncoding.Encode(dst, src)
 	for dst[n-1] == '=' {
 		n--
 	}
@@ -28,8 +26,8 @@ func Base64Decode(src []byte) ([]byte, error) {
 		src = append(src, '=')
 	}
 
-	dst := make([]byte, bcEncoding.DecodedLen(len(src)))
-	n, err := bcEncoding.Decode(dst, src)
+	dst := make([]byte, base64.BcryptEncoding.DecodedLen(len(src)))
+	n, err := base64.BcryptEncoding.Decode(dst, src)
 	if err != nil {
 		return nil, err
 	}
