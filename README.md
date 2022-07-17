@@ -1,3 +1,5 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/go-crypt/x.svg)](https://pkg.go.dev/github.com/go-crypt/x)
+
 # github.com/go-crypt/x
 
 Low level library which copies several elements from [golang.org/x/crypto]. For a higher level library see
