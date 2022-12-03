@@ -1,25 +1,38 @@
 package crypt
 
 import (
-	"encoding/base64"
+	"crypto/hmac"
+	"crypto/md5"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"hash"
-
-	b64 "github.com/go-crypt/x/base64"
+	"strconv"
 )
 
-func Key(hashFunc func() hash.Hash, password, salt []byte, rounds int) []byte {
+// KeySHACrypt calculates the shacrypt SHA256/SHA512 key given an appropriate hash.Hash, password, salt, and number of rounds.
+func KeySHACrypt(hashFunc func() hash.Hash, password, salt []byte, rounds int) []byte {
+	// Step 1.
+	digest := hashFunc()
+
+	size := digest.Size()
+
+	switch size {
+	case sha1.Size:
+		return KeySHA1Crypt(password, salt, rounds)
+	case sha256.Size, sha512.Size:
+		break
+	default:
+		return nil
+	}
+
 	length := len(password)
 
-	// Step 1.
-	digestA := hashFunc()
-	keyLength := base64.RawStdEncoding.EncodedLen(digestA.Size())
-	digestLength := digestA.Size()
-
 	// Step 2.
-	digestA.Write(password)
+	digest.Write(password)
 
 	// Step 3.
-	digestA.Write(salt)
+	digest.Write(salt)
 
 	// Step 4.
 	digestB := hashFunc()
@@ -39,153 +52,245 @@ func Key(hashFunc func() hash.Hash, password, salt []byte, rounds int) []byte {
 	digestB = nil
 
 	// Step 9 and 10:
-	digestA.Write(repeat(sumB, length))
+	digest.Write(repeat(sumB, length))
 
 	// Step 11.
 	for i := length; i > 0; i >>= 1 {
 		if even(i) {
-			digestA.Write(password)
+			digest.Write(password)
 		} else {
-			digestA.Write(sumB)
+			digest.Write(sumB)
 		}
 	}
 
-	// Step 12.
-	sumA := digestA.Sum(nil)
-	digestA.Reset()
-	digestA = nil
+	clean(sumB)
 	sumB = nil
 
-	// Step 13.
-	digestDP := hashFunc()
+	// Step 12.
+	sumA := digest.Sum(nil)
+	digest.Reset()
 
-	// Step 14.
+	// Step 13-14.
 	for i := 0; i < length; i++ {
-		digestDP.Write(password)
+		digest.Write(password)
 	}
 
 	// Step 15.
-	sumDP := digestDP.Sum(nil)
-	digestDP.Reset()
-	digestDP = nil
+	sumDP := digest.Sum(nil)
+	digest.Reset()
 
 	// Step 16.
 	seqP := repeat(sumDP, length)
 	sumDP = nil
 
-	// Step 17.
-	digestDS := hashFunc()
-
-	// Step 18.
+	// Step 17-18.
 	for i := 0; i < 16+int(sumA[0]); i++ {
-		digestDS.Write(salt)
+		digest.Write(salt)
 	}
 
 	// Step 19.
-	sumDS := digestDS.Sum(nil)
-	digestDS.Reset()
-	digestDS = nil
+	sumDS := digest.Sum(nil)
+	digest.Reset()
 
 	// Step 20.
 	seqS := repeat(sumDS, len(salt))
 
 	// Step 21.
-	digestC := hashFunc()
 	for i := 0; i < rounds; i++ {
-		digestC.Reset()
+		digest.Reset()
 
 		// Step 21 Sub-Step B and C.
 		if i&1 != 0 {
 			// Step 21 Sub-Step B.
-			digestC.Write(seqP)
+			digest.Write(seqP)
 		} else {
 			// Step 21 Sub-Step C.
-			digestC.Write(sumA)
+			digest.Write(sumA)
 		}
 
 		// Step 21 Sub-Step D.
 		if i%3 != 0 {
-			digestC.Write(seqS)
+			digest.Write(seqS)
 		}
 
 		// Step 21 Sub-Step E.
 		if i%7 != 0 {
-			digestC.Write(seqP)
+			digest.Write(seqP)
 		}
 
 		// Step 21 Sub-Step F and G.
 		if i&1 != 0 {
 			// Step 21 Sub-Step F.
-			digestC.Write(sumA)
+			digest.Write(sumA)
 		} else {
 			// Step 21 Sub-Step G.
-			digestC.Write(seqP)
+			digest.Write(seqP)
 		}
 
 		// Sub-Step H.
-		copy(sumA, digestC.Sum(nil))
+		copy(sumA, digest.Sum(nil))
 	}
 
-	digestC.Reset()
-	digestC = nil
+	digest.Reset()
+	digest = nil
 
 	seqP, seqS = nil, nil
 
-	switch keyLength {
-	case sha256KeyLength:
+	switch size {
+	case sha256.Size:
 		// Step 22 Sub Step E.
-		return keyFromSum(sumA, sha256ByteMap, digestLength)
-	case sha512KeyLength:
+		return permute(sumA, permuteTableSHACryptSHA256[:])
+	case sha512.Size:
 		// Step 22 Sub Step E.
-		return keyFromSum(sumA, sha512ByteMap, digestLength)
+		return permute(sumA, permuteTableSHACryptSHA512[:])
 	}
 
 	return nil
 }
 
-func keyFromSum(sum []byte, keyMap []int, digestLength int) []byte {
-	key := make([]byte, digestLength)
+// KeySHA1Crypt calculates the sha1crypt key given a password, salt, and number of rounds.
+func KeySHA1Crypt(password, salt []byte, rounds int) []byte {
+	digest := hmac.New(sha1.New, password)
+	digest.Write(salt)
+	digest.Write(prefixSHA1Crypt)
+	digest.Write([]byte(strconv.FormatUint(uint64(rounds), 10)))
 
-	for i := 0; i < digestLength; i++ {
-		key[i] = sum[keyMap[i]]
+	sumA := digest.Sum(nil)
+
+	for rounds--; rounds > 0; rounds-- {
+		digest.Reset()
+
+		digest.Write(sumA)
+
+		copy(sumA, digest.Sum(nil))
 	}
 
-	return b64.EncodeCrypt(key)
+	return permute(sumA, permuteTableSHA1Crypt[:])
 }
 
-func even(i int) bool {
-	return i%2 == 0
+// KeyMD5Crypt calculates the md5crypt key given a password and salt.
+func KeyMD5Crypt(password, salt []byte) []byte {
+	length := len(password)
+
+	digest := md5.New()
+
+	digest.Write(password)
+	digest.Write(salt)
+	digest.Write(password)
+
+	sumB := digest.Sum(nil)
+
+	digest.Reset()
+
+	digest.Write(password)
+	digest.Write(prefixMD5Crypt)
+	digest.Write(salt)
+	digest.Write(repeat(sumB, length))
+
+	clean(sumB)
+
+	for i := length; i > 0; i >>= 1 {
+		if even(i) {
+			digest.Write(password[0:1])
+		} else {
+			digest.Write([]byte{0})
+		}
+	}
+
+	sumA := digest.Sum(nil)
+
+	for i := 0; i < 1000; i++ {
+		digest.Reset()
+
+		if even(i) {
+			digest.Write(sumA)
+		} else {
+			digest.Write(password)
+		}
+
+		if i%3 != 0 {
+			digest.Write(salt)
+		}
+
+		if i%7 != 0 {
+			digest.Write(password)
+		}
+
+		if i&1 == 0 {
+			digest.Write(password)
+		} else {
+			digest.Write(sumA)
+		}
+
+		copy(sumA, digest.Sum(nil))
+	}
+
+	return permute(sumA, permuteTableMD5Crypt[:])
 }
 
-var (
-	cleanBytes = make([]byte, 64)
-)
+// KeyMD5CryptSun calculates the md5crypt (Sun Version) key given a password, salt, and number rounds.
+func KeyMD5CryptSun(password, salt []byte, rounds int) []byte {
+	digest := md5.New()
 
-func clean(b []byte) {
-	l := len(b)
+	digest.Write(password)
 
-	for ; l > 64; l -= 64 {
-		copy(b[l-64:l], cleanBytes)
+	if rounds == 0 {
+		digest.Write(prefixSunMD5Crypt)
+		digest.Write(salt)
+		digest.Write(sepCrypt)
+	} else {
+		digest.Write(prefixSunMD5CryptRounds)
+		digest.Write([]byte(strconv.FormatUint(uint64(rounds), 10)))
+		digest.Write(sepCrypt)
+		digest.Write(salt)
+		digest.Write(sepCrypt)
 	}
 
-	if l > 0 {
-		copy(b[0:l], cleanBytes[0:l])
-	}
-}
+	sumA := digest.Sum(nil)
 
-func repeat(input []byte, length int) []byte {
-	var (
-		seq  = make([]byte, length)
-		unit = len(input)
-	)
+	iterations := uint32(rounds + 4096)
 
-	j := length / unit * unit
-	for i := 0; i < j; i += unit {
-		copy(seq[i:length], input)
-	}
-	if j < length {
-		copy(seq[j:length], input[0:length-j])
+	bit := func(off uint32) uint32 {
+		off %= 128
+		if (sumA[off/8] & (0x01 << (off % 8))) != 0 {
+			return 1
+		}
+
+		return 0
 	}
 
-	return seq
+	var ind7 [md5.Size]byte
+
+	for i := uint32(0); i < iterations; i++ {
+		digest.Reset()
+
+		digest.Write(sumA)
+
+		for j := 0; j < md5.Size; j++ {
+			off := (j + 3) % 16
+			ind4 := (sumA[j] >> (sumA[off] % 5)) & 0x0F
+			sh7 := (sumA[off] >> (sumA[j] % 8)) & 0x01
+			ind7[j] = (sumA[ind4] >> sh7) & 0x7F
+		}
+
+		var indA, indB uint32
+
+		for j := uint(0); j < 8; j++ {
+			indA |= bit(uint32(ind7[j])) << j
+			indB |= bit(uint32(ind7[j+8])) << j
+		}
+
+		indA = (indA >> bit(i)) & 0x7F
+		indB = (indB >> bit(i+64)) & 0x7F
+
+		if bit(indA)^bit(indB) == 1 {
+			digest.Write(magicTableMD5CryptSunHamlet[:])
+		}
+
+		digest.Write([]byte(strconv.FormatUint(uint64(i), 10)))
+
+		copy(sumA, digest.Sum(nil))
+	}
+
+	return permute(sumA, permuteTableMD5Crypt[:])
 }
