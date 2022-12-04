@@ -19,7 +19,7 @@ func KeySHACrypt(hashFunc func() hash.Hash, password, salt []byte, rounds int) [
 
 	switch size {
 	case sha1.Size:
-		return KeySHA1Crypt(password, salt, rounds)
+		return KeySHA1Crypt(password, salt, uint32(rounds))
 	case sha256.Size, sha512.Size:
 		break
 	default:
@@ -149,7 +149,7 @@ func KeySHACrypt(hashFunc func() hash.Hash, password, salt []byte, rounds int) [
 }
 
 // KeySHA1Crypt calculates the sha1crypt key given a password, salt, and number of rounds.
-func KeySHA1Crypt(password, salt []byte, rounds int) []byte {
+func KeySHA1Crypt(password, salt []byte, rounds uint32) []byte {
 	digest := hmac.New(sha1.New, password)
 	digest.Write(salt)
 	digest.Write(prefixSHA1Crypt)
