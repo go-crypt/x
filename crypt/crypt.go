@@ -229,7 +229,7 @@ func KeyMD5Crypt(password, salt []byte) []byte {
 }
 
 // KeyMD5CryptSun calculates the md5crypt (Sun Version) key given a password, salt, and number rounds.
-func KeyMD5CryptSun(password, salt []byte, rounds int) []byte {
+func KeyMD5CryptSun(password, salt []byte, rounds uint32) []byte {
 	digest := md5.New()
 
 	digest.Write(password)
