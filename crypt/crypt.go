@@ -157,6 +157,10 @@ func KeySHA1Crypt(password, salt []byte, rounds uint32) []byte {
 
 	sumA := digest.Sum(nil)
 
+	if rounds == 0 {
+		return permute(sumA, permuteTableSHA1Crypt[:])
+	}
+
 	for rounds--; rounds > 0; rounds-- {
 		digest.Reset()
 
