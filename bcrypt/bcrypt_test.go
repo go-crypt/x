@@ -7,8 +7,46 @@ package bcrypt
 import (
 	"bytes"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func TestDecodeSecret(t *testing.T) {
+	testCases := []struct {
+		name         string
+		have         []byte
+		expected     []byte
+		expectedSalt []byte
+	}{
+		{
+			"ShouldDecode",
+			[]byte("gKt7Q/V29tf48wMkEoYlNOk.XttO4IJdWKVDQPHLxkZMs9VEFwfv2"),
+			[]byte("k.XttO4IJdWKVDQPHLxkZMs9VEFwfv2"),
+			[]byte("gKt7Q/V29tf48wMkEoYlNO"),
+		},
+		{
+			"ShouldNotPanicWithShortSalt",
+			[]byte("gKt7Q/V29tf48wMkEoYlN"),
+			[]byte(nil),
+			[]byte("gKt7Q/V29tf48wMkEoYlN"),
+		},
+		{
+			"ShouldNotPanicWithEmptySecret",
+			[]byte(""),
+			nil,
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			salt, key := DecodeSecret(tc.have)
+
+			assert.Equal(t, tc.expected, key)
+			assert.Equal(t, tc.expectedSalt, salt)
+		})
+	}
+}
 
 func TestBcryptingIsEasy(t *testing.T) {
 	pass := []byte("mypassword")
