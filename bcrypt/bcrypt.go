@@ -158,14 +158,18 @@ func newFromHash(hashedSecret []byte) (*hashed, error) {
 }
 
 func DecodeSecret(secret []byte) (salt, key []byte) {
+	switch s := len(secret); {
+	case s == 0:
+		return nil, nil
+	case s < EncodedSaltSize:
+		return secret, nil
+	default:
+		salt, key = make([]byte, EncodedSaltSize, EncodedSaltSize+2), make([]byte, len(secret)-EncodedSaltSize)
 
-	salt = make([]byte, encodedSaltSize, encodedSaltSize+2)
+		copy(salt, secret[:EncodedSaltSize])
 
-	copy(salt, secret[:encodedSaltSize])
-
-	key = make([]byte, len(secret)-encodedSaltSize)
-
-	copy(key, secret[encodedSaltSize:])
+		copy(key, secret[EncodedSaltSize:])
+	}
 
 	return
 }
@@ -237,9 +241,9 @@ func (p *hashed) Hash() []byte {
 	arr[n] = '$'
 	n++
 	copy(arr[n:], p.salt)
-	n += encodedSaltSize
+	n += EncodedSaltSize
 	copy(arr[n:], p.hash)
-	n += encodedHashSize
+	n += EncodedHashSize
 	return arr[:n]
 }
 
