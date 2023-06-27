@@ -85,10 +85,11 @@ func CompareHashAndPassword(hashedPassword, password []byte) error {
 // to be increased in order to adjust for greater computational power, this
 // function allows one to establish which passwords need to be updated.
 func Cost(hashedPassword []byte) (int, error) {
-	p, err := newFromHash(hashedPassword)
+	p, _, err := newFromHashPartial(hashedPassword)
 	if err != nil {
 		return 0, err
 	}
+
 	return p.cost, nil
 }
 
@@ -136,40 +137,56 @@ func newFromPassword(password []byte, cost int) (p *hashed, err error) {
 	return newFromPasswordSalt(password, salt, cost)
 }
 
-func newFromHash(hashedSecret []byte) (*hashed, error) {
+func newFromHashPartial(hashedSecret []byte) (p *hashed, secret []byte, err error) {
 	if len(hashedSecret) < minHashSize {
-		return nil, ErrHashTooShort
+		return nil, nil, ErrHashTooShort
 	}
-	p := new(hashed)
+
+	p = new(hashed)
+
 	n, err := p.decodeVersion(hashedSecret)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
 	hashedSecret = hashedSecret[n:]
+
 	n, err = p.decodeCost(hashedSecret)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	hashedSecret = hashedSecret[n:]
+
+	return p, hashedSecret, nil
+}
+
+func newFromHash(hashedSecret []byte) (*hashed, error) {
+	p, hashedSecret, err := newFromHashPartial(hashedSecret)
 	if err != nil {
 		return nil, err
 	}
-	hashedSecret = hashedSecret[n:]
+
+	if len(hashedSecret) != EncodedSaltSize+EncodedHashSize {
+		return nil, ErrSecretInvalidLength
+	}
 
 	p.salt, p.hash = DecodeSecret(hashedSecret)
 
 	return p, nil
 }
 
+// DecodeSecret decodes a valid bcrypt secret into a salt and key. This function will panic if the secret does not have
+// the len of EncodedSaltSize + EncodedHashSize.
 func DecodeSecret(secret []byte) (salt, key []byte) {
-	switch s := len(secret); {
-	case s == 0:
-		return nil, nil
-	case s < EncodedSaltSize:
-		return secret, nil
-	default:
-		salt, key = make([]byte, EncodedSaltSize, EncodedSaltSize+2), make([]byte, len(secret)-EncodedSaltSize)
-
-		copy(salt, secret[:EncodedSaltSize])
-
-		copy(key, secret[EncodedSaltSize:])
+	if len(secret) != EncodedSaltSize+EncodedHashSize {
+		panic("secret is malformed as it does not have the expected size")
 	}
+
+	salt, key = make([]byte, EncodedSaltSize, EncodedSaltSize), make([]byte, EncodedHashSize, EncodedHashSize)
+
+	copy(salt, secret[:EncodedSaltSize])
+	copy(key, secret[EncodedSaltSize:])
 
 	return
 }

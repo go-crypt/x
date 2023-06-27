@@ -17,33 +17,45 @@ func TestDecodeSecret(t *testing.T) {
 		have         []byte
 		expected     []byte
 		expectedSalt []byte
+		shouldPanic  bool
 	}{
 		{
 			"ShouldDecode",
 			[]byte("gKt7Q/V29tf48wMkEoYlNOk.XttO4IJdWKVDQPHLxkZMs9VEFwfv2"),
 			[]byte("k.XttO4IJdWKVDQPHLxkZMs9VEFwfv2"),
 			[]byte("gKt7Q/V29tf48wMkEoYlNO"),
+			false,
 		},
 		{
-			"ShouldNotPanicWithShortSalt",
+			"ShouldPanicOnInvalidSize",
 			[]byte("gKt7Q/V29tf48wMkEoYlN"),
-			[]byte(nil),
-			[]byte("gKt7Q/V29tf48wMkEoYlN"),
+			nil,
+			nil,
+			true,
 		},
 		{
-			"ShouldNotPanicWithEmptySecret",
+			"ShouldPanicWithEmptySecret",
 			[]byte(""),
 			nil,
 			nil,
+			true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			salt, key := DecodeSecret(tc.have)
+			if tc.shouldPanic {
+				assert.Panics(t, func() {
+					_, _ = DecodeSecret(tc.have)
+				})
+			} else {
+				assert.NotPanics(t, func() {
+					salt, key := DecodeSecret(tc.have)
 
-			assert.Equal(t, tc.expected, key)
-			assert.Equal(t, tc.expectedSalt, salt)
+					assert.Equal(t, tc.expected, key)
+					assert.Equal(t, tc.expectedSalt, salt)
+				})
+			}
 		})
 	}
 }

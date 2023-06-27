@@ -5,13 +5,18 @@ import (
 	"fmt"
 )
 
-// ErrMismatchedHashAndPassword is the error returned from CompareHashAndPassword when a password and hash do
-// not match.
-var ErrMismatchedHashAndPassword = errors.New("github.com/go-crypt/x/bcrypt: hashedPassword is not the hash of the given password")
+var (
+	// ErrMismatchedHashAndPassword is the error returned from CompareHashAndPassword when a password and hash do
+	// not match.
+	ErrMismatchedHashAndPassword = errors.New("github.com/go-crypt/x/bcrypt: the provided password is not a match for the provided hashed password")
 
-// ErrHashTooShort is the error returned from CompareHashAndPassword when a hash is too short to
-// be a bcrypt hash.
-var ErrHashTooShort = errors.New("github.com/go-crypt/x/bcrypt: hashedSecret too short to be a bcrypted password")
+	// ErrHashTooShort is the error returned from CompareHashAndPassword when a hash is too short to
+	// be a bcrypt hash.
+	ErrHashTooShort = errors.New("github.com/go-crypt/x/bcrypt: hashed secret key is too short to be a bcrypt hashed secret key")
+
+	// ErrSecretInvalidLength is the error returned when a hash secret is too short to be a bcrypt secret.
+	ErrSecretInvalidLength = errors.New("github.com/go-crypt/x/bcrypt: secret has an invalid length for a bcrypt secret")
+)
 
 // The error returned from CompareHashAndPassword when a hash was created with
 // a bcrypt algorithm newer than this implementation.
