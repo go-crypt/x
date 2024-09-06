@@ -1,6 +1,6 @@
 module github.com/go-crypt/x
 
-go 1.23
+go 1.22
 
 toolchain go1.23.1
 
