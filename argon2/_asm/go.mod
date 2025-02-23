@@ -3,7 +3,7 @@ module argon2/_asm
 go 1.23
 
 require (
-	github.com/go-crypt/x v0.3.3
+	github.com/go-crypt/x v0.3.4
 	github.com/mmcloughlin/avo v0.6.0
 )
 
