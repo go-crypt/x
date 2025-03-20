@@ -1,5 +1,5 @@
-github.com/go-crypt/x v0.3.5 h1:6ES+QnY2Ie066Q6MX6FAWoAMca0iS1D2P5MkaLAmsBM=
-github.com/go-crypt/x v0.3.5/go.mod h1:xIVei5GQo5u6bSmLN7DKqLN6jpgTSw0lQvygxU1TLwQ=
+github.com/go-crypt/x v0.3.6 h1:l0YyDQ6icMc8kw3jNTCrd8Zd+JCDOpGNPuNkYSynenc=
+github.com/go-crypt/x v0.3.6/go.mod h1:xJ8o/QRfrm+9oQl1SBIAwhsrF0Ap6T0gaB5Ei9TK7L0=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/mmcloughlin/avo v0.6.0 h1:QH6FU8SKoTLaVs80GA8TJuLNkUYl4VokHKlPhVDg4YY=

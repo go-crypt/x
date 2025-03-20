@@ -1,11 +1,11 @@
 module blake2b/_asm
 
-go 1.23.0
+go 1.24
 
 toolchain go1.24.1
 
 require (
-	github.com/go-crypt/x v0.3.5
+	github.com/go-crypt/x v0.3.6
 	github.com/mmcloughlin/avo v0.6.0
 )
 
