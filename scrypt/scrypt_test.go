@@ -9,6 +9,8 @@ import (
 	"testing"
 )
 
+const maxInt = int(^uint(0) >> 1)
+
 type testVector struct {
 	password string
 	salt     string
