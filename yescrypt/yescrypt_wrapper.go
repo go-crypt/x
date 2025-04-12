@@ -33,29 +33,40 @@ func atoi64(c byte) int {
 	if c >= '.' && c <= 'z' {
 		return int(atoi64Partial[c-'.'])
 	}
+
 	return 64
+}
+
+func byteEncode64(src byte) byte {
+	return itoa64[src&0x3f]
 }
 
 func encode64(src []byte) []byte {
 	dst := make([]byte, 0, (len(src)*8+5)/6)
+
 	for i := 0; i < len(src); {
 		value, bits := uint32(0), 0
+
 		for ; bits < 24 && i < len(src); bits += 8 {
 			value |= uint32(src[i]) << bits
 			i++
 		}
+
 		for ; bits > 0; bits -= 6 {
 			dst = append(dst, itoa64[value&0x3f])
 			value >>= 6
 		}
 	}
+
 	return dst
 }
 
 func decode64(src []byte) []byte {
 	dst := make([]byte, 0, len(src)*3/4)
+
 	for i := 0; i < len(src); {
 		value, bits := uint32(0), uint32(0)
+
 		for ; bits < 24 && i < len(src); bits += 6 {
 			c := atoi64(src[i])
 			if c > 63 {
@@ -64,13 +75,16 @@ func decode64(src []byte) []byte {
 			i++
 			value |= uint32(c) << bits
 		}
+
 		if bits < 12 { // Must have at least one full byte
 			return nil
 		}
+
 		for ; bits >= 8; bits -= 8 {
 			dst = append(dst, byte(value))
 			value >>= 8
 		}
+
 		if value != 0 { // May have 2 or 4 bits left, which must be 0
 			return nil
 		}
@@ -78,20 +92,22 @@ func decode64(src []byte) []byte {
 	return dst
 }
 
-// Computes yescrypt hash encoding given the password and existing yescrypt
-// setting or full hash encoding.  The salt and other parameters are decoded
+// Hash computes yescrypt hash encoding given the password and existing yescrypt
+// setting or full hash encoding. The salt and other parameters are decoded
 // from setting.  Currently supports (only a little more than) the subset of
 // yescrypt parameters that libxcrypt can generate (as of libxcrypt 4.4.36).
 func Hash(password, setting []byte) ([]byte, error) {
 	if len(setting) < 7 || string(setting[:4]) != "$y$j" || setting[6] != '$' {
 		return nil, errors.New("yescrypt: unsupported parameters")
 	}
+
 	// Proper yescrypt uses variable-length integers
 	// We take a shortcut approach that works in a more limited range
 	Nlog2 := atoi64(setting[4]) + 1
 	if Nlog2 < 10 || Nlog2 > 18 {
 		return nil, errors.New("yescrypt: N out of supported range")
 	}
+
 	r := atoi64(setting[5]) + 1
 	if r < 1 || r > 32 {
 		return nil, errors.New("yescrypt: r out of supported range")
@@ -101,6 +117,7 @@ func Hash(password, setting []byte) ([]byte, error) {
 	if saltEnd < 7 {
 		saltEnd = len(setting)
 	}
+
 	salt := decode64(setting[7:saltEnd])
 	if salt == nil {
 		return nil, errors.New("yescrypt: bad salt encoding")
@@ -116,3 +133,18 @@ func Hash(password, setting []byte) ([]byte, error) {
 	return bytes.Join([][]byte{setting[0:saltEnd], hash}, []byte("$")), nil
 }
 
+func EncodeSetting(flags, ln, r int) []byte {
+	if flags <= 0 {
+		flags = 0xB6
+	}
+
+	return []byte(string(byteEncode64(byte(flags))) + string(byteEncode64(byte(ln-1))) + string(byteEncode64(byte(r-1))))
+}
+
+func DecodeSetting(setting []byte) (flags, ln, r int, err error) {
+	if len(setting) != 3 {
+		return 0, 0, 0, errors.New("yescrypt: bad setting")
+	}
+
+	return atoi64(setting[0]), atoi64(setting[1]) + 1, atoi64(setting[2]) + 1, nil
+}

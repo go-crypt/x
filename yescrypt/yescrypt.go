@@ -280,9 +280,11 @@ func deriveKey(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
 	if N <= 1 || N&(N-1) != 0 {
 		return nil, errors.New("yescrypt: N must be > 1 and a power of 2")
 	}
+
 	if r <= 0 {
 		return nil, errors.New("yescrypt: r must be > 0")
 	}
+
 	if p != 1 {
 		return nil, errors.New("yescrypt: p must be 1")
 	}
@@ -308,6 +310,7 @@ func deriveKey(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
 		if pass == 1 {
 			prehash = prehash[:8]
 		}
+
 		h := hmac.New(sha256.New, prehash)
 		h.Write(*ppassword)
 		passwordSha256 := h.Sum(nil)
@@ -337,8 +340,6 @@ func deriveKey(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
 	return key[:keyLen], nil
 }
 
-// Native yescrypt
-//
 // Key computes native yescrypt assuming reference yescrypt's current default
 // flags (as of yescrypt 1.1.0), p=1 (which it currently requires), t=0, and no
 // ROM.  Example usage:
@@ -350,4 +351,3 @@ func deriveKey(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
 func Key(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
 	return deriveKey(password, salt, N, r, p, keyLen)
 }
-
