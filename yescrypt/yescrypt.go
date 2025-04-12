@@ -339,9 +339,9 @@ func deriveKey(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
 
 // Native yescrypt
 //
-// Key is similar to ScryptKey, but computes native yescrypt assuming
-// reference yescrypt's current default flags (as of yescrypt 1.1.0), p=1
-// (which it currently requires), t=0, and no ROM.  Example usage:
+// Key computes native yescrypt assuming reference yescrypt's current default
+// flags (as of yescrypt 1.1.0), p=1 (which it currently requires), t=0, and no
+// ROM.  Example usage:
 //
 //	dk, err := yescrypt.Key([]byte("some password"), salt, 32768, 8, 1, 32)
 //
