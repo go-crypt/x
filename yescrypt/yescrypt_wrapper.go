@@ -43,7 +43,7 @@ func Hash(password, setting []byte) ([]byte, error) {
 		saltEnd = len(setting)
 	}
 
-	salt := decode64(setting[7:saltEnd])
+	salt := Decode64(setting[7:saltEnd])
 	if salt == nil {
 		return nil, errors.New("yescrypt: bad salt encoding")
 	}
@@ -53,7 +53,7 @@ func Hash(password, setting []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	hash := encode64(key)
+	hash := Encode64(key)
 
 	return bytes.Join([][]byte{setting[0:saltEnd], hash}, []byte("$")), nil
 }

@@ -28,7 +28,7 @@ func byteEncode64(src byte) byte {
 	return itoa64[src&0x3f]
 }
 
-func encode64(src []byte) []byte {
+func Encode64(src []byte) []byte {
 	dst := make([]byte, 0, (len(src)*8+5)/6)
 
 	for i := 0; i < len(src); {
@@ -48,7 +48,7 @@ func encode64(src []byte) []byte {
 	return dst
 }
 
-func decode64(src []byte) []byte {
+func Decode64(src []byte) []byte {
 	dst := make([]byte, 0, len(src)*3/4)
 
 	for i := 0; i < len(src); {
