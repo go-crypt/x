@@ -80,6 +80,7 @@ func Decode64(src []byte) []byte {
 }
 
 func EncodeSetting(flags, ln, r int) []byte {
+	// TODO: Properly handle flags instead of hardcoding 'j'.
 	return []byte("j" + string(byteEncode64(byte(ln-1))) + string(byteEncode64(byte(r-1))))
 }
 
@@ -88,9 +89,11 @@ func DecodeSetting(setting []byte) (flags, ln, r int, err error) {
 		return 0, 0, 0, errors.New("yescrypt: bad setting")
 	}
 
+	// TODO: Properly handle flags.
 	if setting[0] != byte(106) {
 		return 0, 0, 0, errors.New("yescrypt: bad setting")
 	}
 
+	// TODO: Properly handle flags.
 	return 182, atoi64(setting[1]) + 1, atoi64(setting[2]) + 1, nil
 }
