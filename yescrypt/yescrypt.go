@@ -276,19 +276,17 @@ func smixYescrypt(b []byte, r, N int, v, xy []uint64, passwordSha256 []byte) {
 	smix(b, r, N, ((N+2)/3+1) & ^1, v, xy, &ctx)
 }
 
-func deriveKey(password, salt []byte, N, r, p, keyLen int, isYescrypt bool) ([]byte, error) {
+func deriveKey(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
 	if N <= 1 || N&(N-1) != 0 {
-		return nil, errors.New("(ye)scrypt: N must be > 1 and a power of 2")
+		return nil, errors.New("yescrypt: N must be > 1 and a power of 2")
 	}
 	if r <= 0 {
-		return nil, errors.New("(ye)scrypt: r must be > 0")
+		return nil, errors.New("yescrypt: r must be > 0")
 	}
-	if isYescrypt && p != 1 {
+	if p != 1 {
 		return nil, errors.New("yescrypt: p must be 1")
 	}
-	if p <= 0 {
-		return nil, errors.New("scrypt: p must be > 0")
-	}
+
 	if uint64(r)*uint64(p) >= 1<<30 || r > maxInt/128/p || r > maxInt/256 || N > maxInt/128/r {
 		return nil, errors.New("(ye)scrypt: parameters are too large")
 	}
@@ -298,54 +296,39 @@ func deriveKey(password, salt []byte, N, r, p, keyLen int, isYescrypt bool) ([]b
 	prehash := []byte("yescrypt-prehash")
 
 	v := make([]uint64, 16*N*r)
-	var xy []uint64
 	var key []byte
 
-	if isYescrypt {
-		xy = make([]uint64, 16*max(r, 2))
-		if N/p >= 0x100 && N/p*r >= 0x20000 {
-			pass = 0
-			N >>= 6
-		}
-	} else {
-		xy = make([]uint64, 32*r)
+	xy := make([]uint64, 16*max(r, 2))
+	if N/p >= 0x100 && N/p*r >= 0x20000 {
+		pass = 0
+		N >>= 6
 	}
 
 	for pass <= 1 {
-		if isYescrypt {
-			if pass == 1 {
-				prehash = prehash[:8]
-			}
-			h := hmac.New(sha256.New, prehash)
-			h.Write(*ppassword)
-			passwordSha256 := h.Sum(nil)
-			ppassword = &passwordSha256
+		if pass == 1 {
+			prehash = prehash[:8]
 		}
+		h := hmac.New(sha256.New, prehash)
+		h.Write(*ppassword)
+		passwordSha256 := h.Sum(nil)
+		ppassword = &passwordSha256
 
 		b := pbkdf2.Key(*ppassword, salt, 1, p*128*r, sha256.New)
 
-		if isYescrypt {
-			copy(*ppassword, b[:32])
-			smixYescrypt(b, r, N, v, xy, *ppassword)
-		} else {
-			for i := 0; i < p; i++ {
-				smix(b[i*128*r:], r, N, N, v, xy, nil)
-			}
-		}
+		copy(*ppassword, b[:32])
+		smixYescrypt(b, r, N, v, xy, *ppassword)
 
 		key = pbkdf2.Key(*ppassword, b, 1, max(keyLen, 32), sha256.New)
 
-		if isYescrypt {
-			if pass == 0 {
-				copy(*ppassword, key[:32])
-				N <<= 6
-			} else {
-				h1 := hmac.New(sha256.New, key[:32])
-				h1.Write([]byte("Client Key"))
-				h2 := sha256.New()
-				h2.Write(h1.Sum(nil))
-				copy(key, h2.Sum(nil))
-			}
+		if pass == 0 {
+			copy(*ppassword, key[:32])
+			N <<= 6
+		} else {
+			h1 := hmac.New(sha256.New, key[:32])
+			h1.Write([]byte("Client Key"))
+			h2 := sha256.New()
+			h2.Write(h1.Sum(nil))
+			copy(key, h2.Sum(nil))
 		}
 
 		pass++
@@ -365,6 +348,6 @@ func deriveKey(password, salt []byte, N, r, p, keyLen int, isYescrypt bool) ([]b
 // The set of parameters accepted by Key will likely change in future versions
 // of this Go module to support more yescrypt functionality.
 func Key(password, salt []byte, N, r, p, keyLen int) ([]byte, error) {
-	return deriveKey(password, salt, N, r, p, keyLen, true)
+	return deriveKey(password, salt, N, r, p, keyLen)
 }
 
