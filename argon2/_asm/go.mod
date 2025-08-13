@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.25.0
 
 require (
-	github.com/go-crypt/x v0.4.6
+	github.com/go-crypt/x v0.4.7
 	github.com/mmcloughlin/avo v0.6.0
 )
 
