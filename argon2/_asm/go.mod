@@ -2,7 +2,7 @@ module argon2/_asm
 
 go 1.24
 
-toolchain go1.25.0
+toolchain go1.25.1
 
 require (
 	github.com/go-crypt/x v0.4.7
