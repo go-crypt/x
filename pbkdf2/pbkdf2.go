@@ -40,14 +40,19 @@ import (
 // Using a higher iteration count will increase the cost of an exhaustive
 // search but will also make derivation proportionally slower.
 func Key(password, salt []byte, iter, keyLen int, h func() hash.Hash) []byte {
+	return KeyExtended(password, salt, int64(iter), int64(keyLen), h)
+}
+
+// KeyExtended is the same as Key but allows the use of int64 inputs.
+func KeyExtended(password, salt []byte, iter, keyLen int64, h func() hash.Hash) []byte {
 	prf := hmac.New(h, password)
-	hashLen := prf.Size()
+	hashLen := int64(prf.Size())
 	numBlocks := (keyLen + hashLen - 1) / hashLen
 
 	var buf [4]byte
 	dk := make([]byte, 0, numBlocks*hashLen)
 	U := make([]byte, hashLen)
-	for block := 1; block <= numBlocks; block++ {
+	for block := int64(1); block <= numBlocks; block++ {
 		// N.B.: || means concatenation, ^ means XOR
 		// for each block T_i = U_1 ^ U_2 ^ ... ^ U_iter
 		// U_1 = PRF(password, salt || uint(i))
@@ -59,11 +64,11 @@ func Key(password, salt []byte, iter, keyLen int, h func() hash.Hash) []byte {
 		buf[3] = byte(block)
 		prf.Write(buf[:4])
 		dk = prf.Sum(dk)
-		T := dk[len(dk)-hashLen:]
+		T := dk[int64(len(dk))-hashLen:]
 		copy(U, T)
 
 		// U_n = PRF(password, U_(n-1))
-		for n := 2; n <= iter; n++ {
+		for n := int64(2); n <= iter; n++ {
 			prf.Reset()
 			prf.Write(U)
 			U = U[:0]
