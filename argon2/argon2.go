@@ -6,7 +6,7 @@
 // Argon2 was selected as the winner of the Password Hashing Competition and can
 // be used to derive cryptographic keys from passwords.
 //
-// For a detailed specification of Argon2 see [1].
+// For a detailed specification of Argon2 see [argon2-specs.pdf].
 //
 // If you aren't sure which function you need, use Argon2id (IDKey) and
 // the parameter recommendations for your scenario.
@@ -18,17 +18,15 @@
 // half of the first iteration over the memory and data-dependent memory access
 // for the rest. Argon2id is side-channel resistant and provides better brute-
 // force cost savings due to time-memory tradeoffs than Argon2i. The recommended
-// parameters for non-interactive operations (taken from [2]) are time=1 and to
-// use the maximum available memory.
+// parameters for non-interactive operations (taken from [RFC 9106 Section 7.4])
+// are time=1 and to use the maximum available memory.
 //
 // # Argon2i
 //
 // Argon2i (implemented by IKey) is the side-channel resistant version of Argon2.
 // It uses data-independent memory access, which is preferred for password
 // hashing and password-based key derivation. Argon2i requires more passes over
-// memory than Argon2id to protect from trade-off attacks. The recommended
-// parameters (taken from [2]) for non-interactive operations are time=3 and to
-// use the maximum available memory.
+// memory than Argon2id to protect from trade-off attacks.
 //
 // # Argon2d
 //
@@ -36,8 +34,8 @@
 // It accesses the memory in a password dependent order which reduces the chances of
 // time-memory trade-off attacks but introduces side-channel attacks.
 //
-// [1] https://github.com/P-H-C/phc-winner-argon2/blob/master/argon2-specs.pdf
-// [2] https://www.rfc-editor.org/rfc/rfc9106.html
+// [argon2-specs.pdf]: https://github.com/P-H-C/phc-winner-argon2/blob/master/argon2-specs.pdf
+// [RFC 9106 Section 7.4]: https://www.rfc-editor.org/rfc/rfc9106.html#section-7.4
 package argon2
 
 import (
