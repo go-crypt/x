@@ -2,7 +2,7 @@ module github.com/go-crypt/x
 
 go 1.25.0
 
-toolchain go1.26.6
+toolchain go1.26.7
 
 require (
 	github.com/stretchr/testify v1.11.1
