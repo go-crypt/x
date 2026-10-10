@@ -2,7 +2,7 @@ module blake2b/_asm
 
 go 1.26.0
 
-toolchain go1.27.1
+toolchain go1.27.2
 
 require (
 	github.com/go-crypt/x v0.4.17
